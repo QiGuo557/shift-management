@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+    <form method="POST" action="">
+        <span>
+            Available Date and Time:
+            <input type="date" name="availability_date">
+            <input type="time" name="availability_start_time">
+            to
+            <input type="time" name="availability_end_time">
+        </span>
+        <input type="submit">
+    </form>
+{% endblock %}

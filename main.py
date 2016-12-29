@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import handlers
 import webapp2
 
 
@@ -23,4 +24,5 @@ class MainHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
+    ('/availability', handlers.AddAvailabilityHandler),
 ], debug=True)
