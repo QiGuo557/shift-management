@@ -12,7 +12,6 @@ class Availability(ndb.Model):
 def save_availability(month, date, start_time, end_time):
     availability = Availability(month=month, date=date, start_time=start_time, end_time=end_time)
     availability.put()
-    print(availability.key)
     return availability
 
 
