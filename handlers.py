@@ -18,7 +18,7 @@ import webapp2
 import os
 from datetime import datetime
 from google.appengine.ext.webapp import template
-from models import save_availability
+from models import initialize_availability, insert_availability, retrieve_availability
 
 
 class AddAvailabilityHandler(webapp2.RequestHandler):
@@ -32,6 +32,7 @@ class AddAvailabilityHandler(webapp2.RequestHandler):
         month = date.month
         start_time = datetime.strptime(self.request.get('availability_start_time'), '%H:%M').time()
         end_time = datetime.strptime(self.request.get('availability_end_time'), '%H:%M').time()
-        save_availability(month, date, start_time, end_time)
+        insert_availability(employee="Qi", month=month, date=date, start_time=start_time, end_time=end_time)
+        retrieve_availability(employee="Qi", month=month)
         self.redirect('/')
 
