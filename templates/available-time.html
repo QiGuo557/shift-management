@@ -1,13 +1,215 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
-    <form method="POST" action="">
-        <span>
-            Available Date and Time:
-            <input type="date" name="availability_date">
-            <input type="time" name="availability_start_time">
-            to
-            <input type="time" name="availability_end_time">
-        </span>
-        <input type="submit">
-    </form>
+<div class="container">
+    <h3>Available Date and Time:</h3>
+    <div class="form-inline">
+        <div class="form-group">
+            <label for="availability-date">Date: </label>
+            <input type="date" name="availability-date" id="availability-date" class="form-control">
+        </div>
+        <div class="form-group">
+           <label for="availability-start-time">Time: </label>
+           <input type="time" name="availability-start-time" id="availability-start-time" class="form-control" aria-label="...">
+        </div>
+        <div class="form-group">
+            <label for="availability-end-time">to</label>
+            <input type="time" name="availability-end-time" id="availability-end-time" class="form-control" aria-label="...">
+        </div>
+        <div class="form-group">
+            <button type="button" class="btn btn-default" id="add-availability-button">Add</button>
+        </div>
+    </div>
+<table class="table table-hover" id="availability_table">
+    <thead>
+        <tr>
+            <td>Date</td>
+            <td>Time</td>
+            <td>Button</td>
+        </tr>
+    </thead>
+    <tbody id="availability-tbody">
+
+    </tbody>
+</table>
+</div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="modify-modal" role="dialog">
+    <div class="modal-dialog">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Modify Availability</h4>
+        </div>
+        <div class="modal-body" id="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" id="update-availability-button">Save</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 {% endblock %}
+{% block extra_js %}
+<script type="text/javascript">
+    function refreshTBody(timeIntervalList) {
+        if( timeIntervalList ) {
+            for (i = 0; i < timeIntervalList.length; i++) {
+                var tr = $('<tr></tr>');
+                var date = $( '<td>' + timeIntervalList[i].date + '</td>');
+                var time = $( '<td>' + timeIntervalList[i].start_time + ' to ' + timeIntervalList[i].end_time + '</td>');
+                var button = $('<td><button type="button" class="btn btn-primary btn-xs" id=' + i + ' ' +
+                    'data-toggle="modal" data-target="#modify-modal" data-date=' + timeIntervalList[i].date +
+                    ' data-start-time=' + timeIntervalList[i].start_time +
+                    ' data-end-time=' + timeIntervalList[i].end_time + '>Modify</button></td>');
+                tr.append(date);
+                tr.append(time);
+                tr.append(button);
+                $('#availability-tbody').append(tr);
+            }
+        }
+    }
+
+
+    function modify_availability(timeIntervalList, month) {
+        $.ajax({
+            type: 'POST',
+            data: {
+                time_interval_list: JSON.stringify(timeIntervalList),
+                employee: 'Qi',
+                month: month
+            },
+            dataType: 'json',
+            success: function(data) {
+                $('#availability-tbody').empty();
+                refreshTBody(data.time_interval_list);
+            }
+        });
+    }
+
+    function get_time_interval() {
+        var date = $('#modal-availability-date').val();
+        var month = date.slice(5, 7);
+        var startTime = $('#modal-availability-start-time').val();
+        var endTime = $('#modal-availability-end-time').val();
+        var defaultSecond = ":00";
+        if ((startTime.match(/:/g) || []).length == 1) {
+            startTime = startTime.concat(defaultSecond);
+        }
+        if ((endTime.match(/:/g) || []).length == 1) {
+            endTime = endTime.concat(defaultSecond);
+        }
+    }
+
+    $(document).ready(function() {
+        var timeIntervalDict = {{ time_interval|safe }}
+        var timeIntervalList = [];
+
+        if (timeIntervalDict) {
+            timeIntervalList = timeIntervalDict.time_interval_list;
+            refreshTBody(timeIntervalList);
+        }
+
+        $('#add-availability-button').click(function () {
+            var date = $('#availability-date').val();
+            var month = date.slice(5, 7);
+            var startTime = $('#availability-start-time').val();
+            var endTime = $('#availability-end-time').val();
+            var defaultSecond = ":00";
+            debugger;
+            startTime = startTime.concat(defaultSecond);
+            endTime = endTime.concat(defaultSecond);
+
+            var timeInterval = {
+                date: date,
+                start_time: startTime,
+                end_time: endTime
+            };
+
+            timeIntervalList.push(timeInterval);
+            modify_availability(timeIntervalList, month);
+
+//            $.ajax({
+//                type: 'POST',
+//                data: {
+//                    time_interval_list: JSON.stringify(timeIntervalList),
+//                    employee: 'Qi',
+//                    month: month
+//                },
+//                dataType: 'json',
+//                success: function(data) {
+//                    $('#availability-tbody').empty();
+//                    refreshTBody(data.time_interval_list);
+//                }
+//            });
+        });
+
+        $('#update-availability-button').click(function () {
+            var date = $('#modal-availability-date').val();
+            var month = date.slice(5, 7);
+            var startTime = $('#modal-availability-start-time').val();
+            var endTime = $('#modal-availability-end-time').val();
+            var defaultSecond = ":00";
+            if ((startTime.match(/:/g) || []).length == 1) {
+                startTime = startTime.concat(defaultSecond);
+            }
+            if ((endTime.match(/:/g) || []).length == 1) {
+                endTime = endTime.concat(defaultSecond);
+            }
+            var availabilityId = $('#update-availability-button').data('id');
+
+            timeIntervalList[availabilityId] = {
+                date: date,
+                start_time: startTime,
+                end_time: endTime
+            };
+//            var timeInterval = timeIntervalList[availabilityId];
+//            timeInterval.date = date;
+//            timeInterval.start_time = startTime;
+//            timeInterval.end_time = endTime;
+
+            debugger;
+            modify_availability(timeIntervalList, month);
+//            $.ajax({
+//                type: 'POST',
+//                data: {
+//                    time_interval_list: JSON.stringify(timeIntervalList),
+//                    employee: 'Qi',
+//                    month: month
+//                },
+//                dataType: 'json',
+//                success: function(data) {
+//                    $('#availability-tbody').empty();
+//                    refreshTBody(data.time_interval_list);
+//                }
+//            });
+        });
+
+
+        $('#modify-modal').on('show.bs.modal', function (e) {
+            var $modal = $(this),
+                availabilityId= e.relatedTarget.id,
+                availabilityDate= e.relatedTarget.dataset.date,
+                availabilityStartTime= e.relatedTarget.dataset.startTime,
+                availabilityEndTime= e.relatedTarget.dataset.endTime,
+                inLine = $('<div class="form-inline" id="form-inline"></div>'),
+                date = $('<div class="form-group"><label for="modal-availability-date">Date: </label><input type="date" name="modal-availability-date" id="modal-availability-date" class="form-control" value='+ availabilityDate +'></div>'),
+                startTime = $('<div class="form-group"><label for="modal-availability-start-time">Time: </label><input type="time" name="modal-availability-start-time" id="modal-availability-start-time" class="form-control" value='+ availabilityStartTime +'></div>'),
+                endTime = $('<div class="form-group"><label for="modal-availability-end-time">to</label><input type="time" name="modal-availability-end-time" id="modal-availability-end-time" class="form-control" value='+ availabilityEndTime+'></div>');
+                $('#update-availability-button').attr('data-id', availabilityId);
+            $('#modal-body').append(inLine);
+
+            inLine.append(date);
+            inLine.append(startTime);
+            inLine.append(endTime);
+        })
+        $('#modify-modal').on('hidden.bs.modal', function () {
+            $('#modal-body').empty();
+        })
+    });
+</script>
+{% endblock %}
+
